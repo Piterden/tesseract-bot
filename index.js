@@ -50,42 +50,32 @@ const bot = new Telegraf(BOT_TOKEN, {
 
 const download = (source, destination) => new Promise((resolve, reject) => {
   const file = fs.createWriteStream(destination)
-  let responseSent = false
+  let done = false
 
   https
     .get(source, (response) => {
       response.pipe(file)
       file.on('finish', () => {
         file.close(() => {
-          if (responseSent) return
-          responseSent = true
+          if (done) return
+          done = true
           resolve()
         })
       })
     })
     .on('error', (err) => {
-      if (responseSent) return
-      responseSent = true
+      if (done) return
+      done = true
       reject(err)
     })
 })
 
 const getFileId = (message, type) => {
-  let fileId
-
   switch (type) {
-    case 'photo':
-      fileId = message[type][message.photo.length - 1].file_id
-      break
-
-    case 'document':
-      fileId = message[type].file_id
-      break
-
-    default:
+    case 'photo': return message[type][message.photo.length - 1].file_id
+    case 'document': return message[type].file_id
+    default: return false
   }
-
-  return fileId
 }
 
 bot.start(async ({ replyWithMarkdown, from }) => replyWithMarkdown(`
@@ -95,21 +85,21 @@ Please send me an image like a photo, which contains English text...
 
 bot.on(['photo', 'document'], async (ctx) => {
   const fileId = getFileId(ctx.message, ctx.updateSubTypes[0])
-  const link = await ctx.telegram.getFileLink(fileId)
-  const filePath = path.resolve(`files/${link.split('/').slice(-1)[0]}`)
+  const fileLink = fileId && await ctx.telegram.getFileLink(fileId)
+  const filePath = fileLink && `files/${fileLink.split('/').slice(-1)[0]}`
+  const fileFullPath = path.resolve(filePath)
 
-  await download(link, filePath)
+  await download(fileLink, fileFullPath)
 
   ocr
-    .create({ langPath: 'eng.traineddata' })
-    .recognize(filePath, { lang: 'eng' })
+    .recognize(fileFullPath, { lang: 'eng' })
     .progress((message) => {
       console.log(message)
     })
     .catch((error) => console.error(error))
-    .then((result) => console.log(result))
-    .finally((resultOrError) => {
-      ctx.reply(resultOrError.text, { disable_web_page_preview: true })
+    // .then((result) => console.log(result))
+    .finally((res) => {
+      ctx.reply(res.text, { disable_web_page_preview: true })
     })
 })
 
