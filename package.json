@@ -1,0 +1,31 @@
+{
+  "name": "tesseract_bot",
+  "version": "1.0.0",
+  "description": "Telegram OCR bot",
+  "main": "index.js",
+  "keywords": [
+    "bot",
+    "telegram",
+    "tesseract",
+    "ocr"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node_modules/.bin/nodemon -e js,json -w index.js -V index.js"
+  },
+  "author": "Denis Efremov <efremov.a.denis@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "dotenv": "^4.0.0",
+    "nodemon": "^1.14.12",
+    "telegraf": "^3.17.7",
+    "tesseract.js": "^1.0.10"
+  },
+  "devDependencies": {
+    "@atomix/eslint-config": "^6.1.1",
+    "babel-eslint": "^7.2.3",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "eslint": "^4.17.0"
+  }
+}
