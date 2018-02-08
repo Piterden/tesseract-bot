@@ -59,4 +59,4 @@ typings/
 .env
 
 *.traineddata
-photos/
+files/

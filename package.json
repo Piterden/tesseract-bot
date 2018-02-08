@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node_modules/.bin/nodemon -e js,json -w index.js -V index.js"
+    "dev": "node_modules/.bin/nodemon -e js -w index.js"
   },
   "author": "Denis Efremov <efremov.a.denis@gmail.com>",
   "license": "MIT",

@@ -48,46 +48,64 @@ const bot = new Telegraf(BOT_TOKEN, {
 // `)
 // })
 
-const download = (url, dest) => {
-  const file = fs.createWriteStream(dest)
+const download = (source, destination) => new Promise((resolve, reject) => {
+  const file = fs.createWriteStream(destination)
+  let responseSent = false
 
-  return new Promise((resolve, reject) => {
-    let responseSent = false
-
-    https
-      .get(url, (response) => {
-        response.pipe(file)
-        file.on('finish', () => {
-          file.close(() => {
-            if (responseSent) return
-            responseSent = true
-            resolve()
-          })
+  https
+    .get(source, (response) => {
+      response.pipe(file)
+      file.on('finish', () => {
+        file.close(() => {
+          if (responseSent) return
+          responseSent = true
+          resolve()
         })
       })
-      .on('error', (err) => {
-        if (responseSent) return
-        responseSent = true
-        reject(err)
-      })
-  })
-}
-
-bot.start(async (ctx) => {
-  await ctx.reply(ctx.message)
+    })
+    .on('error', (err) => {
+      if (responseSent) return
+      responseSent = true
+      reject(err)
+    })
 })
 
-bot.on('photo', async (ctx) => {
-  const fileId = await ctx.message.photo[ctx.message.photo.length - 1].file_id
+const getFileId = (message, type) => {
+  let fileId
+
+  switch (type) {
+    case 'photo':
+      fileId = message[type][message.photo.length - 1].file_id
+      break
+
+    case 'document':
+      fileId = message[type].file_id
+      break
+
+    default:
+  }
+
+  return fileId
+}
+
+bot.start(async ({ replyWithMarkdown, from }) => replyWithMarkdown(`
+Hi ${from.first_name}, I am the Tesseract OCR bot.
+Please send me an image like a photo, which contains English text...
+`))
+
+bot.on(['photo', 'document'], async (ctx) => {
+  const fileId = getFileId(ctx.message, ctx.updateSubTypes[0])
   const link = await ctx.telegram.getFileLink(fileId)
-  const filePath = await path.resolve(link.split('/').slice(-2).join('/')) // eslint-disable-line no-magic-numbers
+  const filePath = path.resolve(`files/${link.split('/').slice(-1)[0]}`)
 
   await download(link, filePath)
 
   ocr
     .create({ langPath: 'eng.traineddata' })
     .recognize(filePath, { lang: 'eng' })
-    .progress((message) => console.log(message))
+    .progress((message) => {
+      console.log(message)
+    })
     .catch((error) => console.error(error))
     .then((result) => console.log(result))
     .finally((resultOrError) => {
