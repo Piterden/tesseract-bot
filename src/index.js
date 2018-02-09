@@ -4,14 +4,10 @@ const path = require('path')
 const https = require('https')
 const ocr = require('tesseract.js')
 const Telegraf = require('telegraf')
+const session = require('telegraf/session')
 
 
 const { BOT_NAME, BOT_TOKEN } = process.env
-
-const bot = new Telegraf(BOT_TOKEN, {
-  telegram: { webhookReply: false },
-  username: BOT_NAME,
-})
 
 const download = (source, destination) => new Promise((resolve, reject) => {
   const file = fs.createWriteStream(destination)
@@ -42,6 +38,14 @@ const getFileId = (message, type) => {
     default: return false
   }
 }
+
+const bot = new Telegraf(BOT_TOKEN, {
+  telegram: { webhookReply: false },
+  username: BOT_NAME,
+})
+
+bot.use(session())
+
 
 bot.start(async ({ replyWithMarkdown, from }) => replyWithMarkdown(`
 Hi ${from.first_name}, I am the Tesseract OCR bot.
