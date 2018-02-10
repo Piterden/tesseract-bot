@@ -1,34 +1,27 @@
 require('dotenv').load()
-const fs = require('fs')
-const path = require('path')
 const https = require('https')
-const ocr = require('tesseract.js')
+const { recognize } = require('penteract')
 const Telegraf = require('telegraf')
 const session = require('telegraf/session')
 
 
 const { BOT_NAME, BOT_TOKEN } = process.env
 
-const download = (source, destination) => new Promise((resolve, reject) => {
-  const file = fs.createWriteStream(destination)
-  let done = false
+const download = (source/* , destination */) => new Promise((resolve, reject) => {
+  https.get(source, (response) => {
+    const data = []
 
-  https
-    .get(source, (response) => {
-      response.pipe(file)
-      file.on('finish', () => {
-        file.close(() => {
-          if (done) return
-          done = true
-          resolve()
-        })
+    response
+      .on('data', (chunk) => {
+        data.push(chunk)
       })
-    })
-    .on('error', (err) => {
-      if (done) return
-      done = true
-      reject(err)
-    })
+      .on('end', () => {
+        resolve(Buffer.concat(data))
+      })
+      .on('error', (err) => {
+        reject(err)
+      })
+  })
 })
 
 const getFileId = (message, type) => {
@@ -46,7 +39,6 @@ const bot = new Telegraf(BOT_TOKEN, {
 
 bot.use(session())
 
-
 bot.start(async ({ replyWithMarkdown, from }) => replyWithMarkdown(`
 Hi ${from.first_name}, I am the Tesseract OCR bot.
 Please send me an image like a photo, which contains English text...
@@ -55,21 +47,18 @@ Please send me an image like a photo, which contains English text...
 bot.on(['photo', 'document'], async (ctx) => {
   const fileId = getFileId(ctx.message, ctx.updateSubTypes[0])
   const fileLink = fileId && await ctx.telegram.getFileLink(fileId)
-  const filePath = fileLink && `files/${fileLink.split('/').slice(-1)[0]}`
-  const fileFullPath = path.resolve(filePath)
 
-  await download(fileLink, fileFullPath)
+  const buffer = await download(fileLink)
+  const result = await recognize(buffer, {
+    lang: [
+      'eng',
+      'rus',
+      'osd',
+      'equ',
+    ]
+  })
 
-  ocr
-    .recognize(fileFullPath, { lang: 'eng' })
-    .progress((message) => {
-      console.log(message)
-    })
-    .catch((error) => console.error(error))
-    // .then((result) => console.log(result))
-    .finally((res) => {
-      ctx.reply(res.text, { disable_web_page_preview: true })
-    })
+  ctx.reply(result, { disable_web_page_preview: true })
 })
 
 bot.startPolling()
