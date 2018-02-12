@@ -1,17 +1,21 @@
 require('dotenv').load()
 
 const Telegraf = require('telegraf')
+const Stage = require('telegraf/stage')
 
 const debug = require('./method/debug')
 const getBuffer = require('./method/get-buffer')
 const getFileId = require('./method/get-file-id')
 const getImageButtons = require('./method/get-image-buttons')
+const langsScene = require('./scene/langs')
+const optionsScene = require('./scene/options')
+const recognizeScene = require('./scene/recognize')
 
 
-const { Stage, session, Markup } = Telegraf
+const { session, Markup } = Telegraf
 const { BOT_NAME, BOT_TOKEN, LANG_COLS } = process.env
 
-const stage = new Stage()
+const stage = new Stage([langsScene, optionsScene, recognizeScene])
 
 const bot = new Telegraf(BOT_TOKEN, {
   telegram: { webhookReply: false },
@@ -32,6 +36,7 @@ bot.on(['photo', 'document'], async (ctx) => {
   const fileLink = fileId && await ctx.telegram.getFileLink(fileId)
 
   ctx.session.buffer = await getBuffer(fileLink)
+  ctx.session.langs = ctx.session.langs || ['eng', 'osd']
 
   ctx.replyWithChatAction('upload_photo')
   ctx.replyWithPhoto(
@@ -41,5 +46,10 @@ bot.on(['photo', 'document'], async (ctx) => {
     Markup.inlineKeyboard([getImageButtons()]).oneTime().resize().extra()
   )
 })
+
+bot.action(
+  /!menu=([-\w]+)/,
+  async ({ scene, match: [, firstMatch] }) => scene.enter(firstMatch)
+)
 
 bot.startPolling()
