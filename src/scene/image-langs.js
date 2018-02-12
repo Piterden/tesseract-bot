@@ -1,13 +1,11 @@
-const { promisify } = require('util')
 const Stage = require('telegraf/stage')
+const Markup = require('telegraf/markup')
 const Scene = require('telegraf/scenes/base')
 
+const getLangButtons = require('../method/get-lang-buttons')
 
-const execPromise = promisify(exec)
 
 const { leave } = Stage
-
-
 
 module.exports = new Scene('image-langs')
 
