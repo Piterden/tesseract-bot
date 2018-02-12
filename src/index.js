@@ -9,8 +9,12 @@ const { inspect, promisify } = require('util')
 
 
 const execPromise = promisify(exec)
-const { BOT_NAME, BOT_TOKEN } = process.env
-const langsListWidth = 3
+const { BOT_NAME, BOT_TOKEN, LANG_COLS } = process.env
+
+const debug = (data) => console.log(inspect(data, {
+  colors: true,
+  showHidden: true,
+}))
 
 const getBuffer = (source) => new Promise((resolve, reject) => {
   https.get(source, (response) => {
@@ -40,7 +44,7 @@ const getFileId = (message, type) => {
 const getSupportedLangsButtons = (list) => list.split('\n').slice(1).sort()
   .map((lang) => Markup.callbackButton(lang, `!lang=${lang}`))
   .reduce((acc, cur) => {
-    if (acc.length === 0 || acc[acc.length - 1].length >= langsListWidth) {
+    if (acc.length === 0 || acc[acc.length - 1].length >= LANG_COLS) {
       acc.push([])
     }
     acc[acc.length - 1].push(cur)
@@ -60,7 +64,7 @@ Please send me an image like a photo, which contains English text...
 `))
 
 bot.on(['photo', 'document'], async (ctx) => {
-  console.log(inspect(ctx.message, { colors: true, showHidden: true }))
+  debug(ctx.from)
   const fileId = getFileId(ctx.message, ctx.updateSubTypes[0])
   const fileLink = fileId && await ctx.telegram.getFileLink(fileId)
 
@@ -74,7 +78,9 @@ bot.on(['photo', 'document'], async (ctx) => {
   )
 })
 
-bot.action(/\!lang=(\w+)/, async (ctx) => {
+bot.action(/!lang=(\w+)/, async (ctx) => {
+  debug(ctx.from)
+  debug(ctx.match)
   const result = await recognize(ctx.session.buffer, {
     lang: [ctx.match[1]],
   })
