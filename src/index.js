@@ -54,14 +54,13 @@ bot.on(
 
 bot.action(
   /!menu=([-\w]+)/,
-  async ({ session: { buffer, langs }, editMessageCaption, scene, match: [, slug] }) => {
+  async ({ session: { buffer, langs }, reply, scene, match: [, slug] }) => {
     if (slug !== 'recognize') {
       return scene.enter(slug)
     }
-
     const result = await recognize(buffer, { langs })
 
-    return editMessageCaption(result, {
+    return reply(result, {
       ...Markup.inlineKeyboard([
         Markup.callbackButton('Change options', '!menu=options'),
         Markup.callbackButton('Change languages', '!menu=langs'),
