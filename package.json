@@ -20,8 +20,7 @@
     "dotenv": "^4.0.0",
     "nodemon": "^1.14.12",
     "penteract": "^0.4.0",
-    "telegraf": "^3.17.7",
-    "tesseract.js": "^1.0.10"
+    "telegraf": "^3.17.7"
   },
   "devDependencies": {
     "@atomix/eslint-config": "^6.1.1",
