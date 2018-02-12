@@ -1,10 +1,10 @@
 const { recognize } = require('penteract')
 
-const Stage = require('telegraf/stage')
-const Markup = require('telegraf/markup')
+// const Stage = require('telegraf/stage')
+// const Markup = require('telegraf/markup')
 const Scene = require('telegraf/scenes/base')
 
-const debug = require('../method/debug')
+// const debug = require('../method/debug')
 
 module.exports = new Scene('recognize')
 

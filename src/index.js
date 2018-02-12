@@ -13,7 +13,7 @@ const recognizeScene = require('./scene/recognize')
 
 
 const { session, Markup } = Telegraf
-const { BOT_NAME, BOT_TOKEN, LANG_COLS } = process.env
+const { BOT_NAME, BOT_TOKEN } = process.env
 
 const stage = new Stage([langsScene, optionsScene, recognizeScene])
 
