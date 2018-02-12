@@ -41,28 +41,27 @@ bot.on(
     ctx.session.langs = ctx.session.langs || ['eng', 'osd']
 
     ctx.replyWithChatAction('upload_photo')
+
     ctx.replyWithPhoto(
+      { source: ctx.session.buffer },
       {
-        source: ctx.session.buffer,
+        caption: `Enabled languages: [${ctx.session.langs.join(',')}]`,
+        ...Markup.inlineKeyboard([getImageButtons()]).oneTime().resize().extra(),
       },
-      Markup.inlineKeyboard([getImageButtons()]).oneTime().resize().extra()
-    ).then(({ message_id: id }) => {
-      ctx.session.messageId = id
-      debug(ctx.session)
-    })
+    )
   }
 )
 
 bot.action(
   /!menu=([-\w]+)/,
-  async ({ session: { buffer, langs }, reply, scene, match: [, slug] }) => {
+  async ({ session: { buffer, langs }, editMessageCaption, scene, match: [, slug] }) => {
     if (slug !== 'recognize') {
       return scene.enter(slug)
     }
 
     const result = await recognize(buffer, { langs })
 
-    return reply(result, {
+    return editMessageCaption(result, {
       ...Markup.inlineKeyboard([
         Markup.callbackButton('Change options', '!menu=options'),
         Markup.callbackButton('Change languages', '!menu=langs'),
