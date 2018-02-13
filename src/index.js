@@ -12,6 +12,7 @@ const langsScene = require('./scene/langs')
 const optionsScene = require('./scene/options')
 
 
+const { leave } = Stage
 const { session, Markup } = Telegraf
 const { BOT_NAME, BOT_TOKEN } = process.env
 
@@ -25,15 +26,18 @@ const bot = new Telegraf(BOT_TOKEN, {
 bot.use(session())
 bot.use(stage.middleware())
 
-bot.start(async ({ replyWithMarkdown, from }) => replyWithMarkdown(`
-Hi ${from.first_name || 'stranger'}, I am the Tesseract OCR bot.
-Please send me an image like a photo, which contains English text...
-`))
+bot.start(async ({ replyWithMarkdown, from }) => replyWithMarkdown(
+  `Hi ${from.first_name || 'stranger'}, I am the Tesseract OCR bot.
+Please send me an image like a photo, which contains English text...`,
+  Markup.removeKeyboard().extra()
+))
 
 bot.on(
   ['photo', 'document'],
   async (ctx) => {
     debug(ctx.message)
+    leave()
+
     const fileId = getFileId(ctx.message, ctx.updateSubTypes[0])
     const fileLink = fileId && await ctx.telegram.getFileLink(fileId)
 
@@ -45,8 +49,9 @@ bot.on(
     ctx.replyWithPhoto(
       { source: ctx.session.buffer },
       {
-        caption: `Enabled languages: [${ctx.session.langs.join(',')}]`,
-        ...Markup.inlineKeyboard([getImageButtons()]).oneTime().resize().extra(),
+        reply_to_message_id: ctx.message.message_id,
+        caption: `Enabled languages: \`${ctx.session.langs.join(',')}\``,
+        ...Markup.inlineKeyboard([getImageButtons()]).extra(),
       },
     )
   }
