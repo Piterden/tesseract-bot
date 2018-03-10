@@ -28,11 +28,9 @@ module.exports = new Scene('langs')
 
   .action(
     /!lang=(\w+)/,
-    async ({
+    async ({ answerCbQuery, editMessageText,
       session: { langs },
       match: [, lang],
-      answerCbQuery,
-      editMessageText,
     }) => {
       if (langs.includes(lang)) {
         langs.splice(langs.findIndex((item) => item === lang), 1)

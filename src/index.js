@@ -63,7 +63,11 @@ bot.action(
     if (slug !== 'recognize') {
       return scene.enter(slug)
     }
-    const result = await recognize(buffer, { langs })
+    let result = await recognize(buffer, { langs })
+
+    if (!result) {
+      result = 'Ok'
+    }
 
     return reply(result, {
       ...Markup.inlineKeyboard([
