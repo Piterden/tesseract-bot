@@ -23,9 +23,9 @@ const bot = new Telegraf(BOT_TOKEN, {
 bot.use(session())
 bot.use(stage.middleware())
 
-bot.start(async ({ replyWithMarkdown, from }) => replyWithMarkdown(
-  `Hi ${from.first_name || 'stranger'}, I am the Tesseract OCR bot.
-Please send me an image like a photo, which contains English text...`,
+bot.start(async (ctx) => ctx.replyWithMarkdown(
+  `Hi ${ctx.from.first_name || 'stranger'}, I'm the Tesseract OCR bot.
+Please send me an image, which contains text for recognize...`,
   Markup.removeKeyboard().extra()
 ))
 
@@ -33,7 +33,7 @@ bot.on(
   ['photo', 'document'],
   async (ctx) => {
     debug(ctx.message)
-    Stage.leave()
+    ctx.scene.leave()
 
     const fileId = tgFileId(ctx.message, ctx.updateSubTypes[0])
     const fileLink = fileId && await ctx.telegram.getFileLink(fileId)
@@ -57,17 +57,24 @@ bot.on(
 
 bot.action(
   /^\/menu\/([-\w]+)$/,
-  async ({ session: { buffer, langs, options }, reply, scene, match: [, slug] }) => {
-    if (slug !== 'recognize') {
-      return scene.enter(slug)
+  async (ctx) => {
+    if (ctx.match[1] !== 'recognize') {
+      return ctx.scene.enter(ctx.match[1])
     }
-    let result = await recognize(buffer, { langs, ...options })
+
+    let result = await recognize(
+      ctx.session.buffer,
+      {
+        langs: ctx.session.langs,
+        ...ctx.session.options,
+      }
+    )
 
     if (!result) {
       result = '/**** Not found! ****/'
     }
 
-    return reply(result, {
+    return ctx.reply(result, {
       ...mainInlineKeyboard(),
       disable_web_page_preview: true,
     })
