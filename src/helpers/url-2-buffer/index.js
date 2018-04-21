@@ -1,8 +1,8 @@
 const https = require('https')
 
 
-const getBuffer = (source) => new Promise((resolve, reject) => {
-  https.get(source, (response) => {
+module.exports = (url) => new Promise((resolve, reject) => {
+  https.get(url, (response) => {
     const data = []
 
     response
@@ -17,5 +17,3 @@ const getBuffer = (source) => new Promise((resolve, reject) => {
       })
   })
 })
-
-module.exports = getBuffer

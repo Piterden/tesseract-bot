@@ -4,19 +4,16 @@ const Telegraf = require('telegraf')
 const Stage = require('telegraf/stage')
 const { recognize } = require('penteract')
 
-const debug = require('./method/debug')
-const getBuffer = require('./method/get-buffer')
-const getFileId = require('./method/get-file-id')
-const getImageButtons = require('./method/get-image-buttons')
-const langsScene = require('./scene/langs')
-const optionsScene = require('./scene/options')
+const { url2Buffer, debug, tgFileId } = require('./helpers')
+const { langsScene, optionsScene } = require('./scenes')
+const { mainInlineKeyboard } = require('./keyboards')
+const { mainMessage } = require('./messages')
 
 
-const { leave } = Stage
 const { session, Markup } = Telegraf
 const { BOT_NAME, BOT_TOKEN } = process.env
 
-const stage = new Stage([langsScene, optionsScene])
+const stage = new Stage([langsScene, optionsScene], { ttl: 120 })
 
 const bot = new Telegraf(BOT_TOKEN, {
   telegram: { webhookReply: false },
@@ -36,44 +33,42 @@ bot.on(
   ['photo', 'document'],
   async (ctx) => {
     debug(ctx.message)
-    leave()
+    Stage.leave()
 
-    const fileId = getFileId(ctx.message, ctx.updateSubTypes[0])
+    const fileId = tgFileId(ctx.message, ctx.updateSubTypes[0])
     const fileLink = fileId && await ctx.telegram.getFileLink(fileId)
 
-    ctx.session.buffer = await getBuffer(fileLink)
+    ctx.session.buffer = await url2Buffer(fileLink)
     ctx.session.langs = ctx.session.langs || ['eng', 'osd']
+    ctx.session.options = ctx.session.options || {}
 
     ctx.replyWithChatAction('upload_photo')
 
-    ctx.replyWithPhoto(
+    ctx.session.message = await ctx.replyWithPhoto(
       { source: ctx.session.buffer },
       {
         reply_to_message_id: ctx.message.message_id,
-        caption: `Enabled languages: \`${ctx.session.langs.join(',')}\``,
-        ...Markup.inlineKeyboard([getImageButtons()]).extra(),
-      },
+        caption: mainMessage(ctx.session.langs),
+        ...mainInlineKeyboard(),
+      }
     )
   }
 )
 
 bot.action(
-  /!menu=([-\w]+)/,
-  async ({ session: { buffer, langs }, reply, scene, match: [, slug] }) => {
+  /^\/menu\/([-\w]+)$/,
+  async ({ session: { buffer, langs, options }, reply, scene, match: [, slug] }) => {
     if (slug !== 'recognize') {
       return scene.enter(slug)
     }
-    let result = await recognize(buffer, { langs })
+    let result = await recognize(buffer, { langs, ...options })
 
     if (!result) {
-      result = 'Ok'
+      result = '/**** Not found! ****/'
     }
 
     return reply(result, {
-      ...Markup.inlineKeyboard([
-        Markup.callbackButton('Change options', '!menu=options'),
-        Markup.callbackButton('Change languages', '!menu=langs'),
-      ]).oneTime().resize().extra(),
+      ...mainInlineKeyboard(),
       disable_web_page_preview: true,
     })
   }
