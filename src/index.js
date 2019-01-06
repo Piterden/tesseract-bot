@@ -26,11 +26,13 @@ const bot = new Telegraf(BOT_TOKEN, {
 bot.use(session())
 bot.use(stage.middleware())
 
-bot.start(async ({ replyWithMarkdown, from }) => replyWithMarkdown(
-  `Hi ${from.first_name || 'stranger'}, I am the Tesseract OCR bot.
+bot.start(async ({ replyWithMarkdown, from }) => {
+  await replyWithMarkdown(
+    `Hi ${from.first_name || 'stranger'}, I am the Tesseract OCR bot.
 Please send me an image like a photo, which contains English text...`,
-  Markup.removeKeyboard().extra()
-))
+    Markup.removeKeyboard().extra()
+  ).catch(console.log)
+})
 
 bot.on(
   ['photo', 'document'],
