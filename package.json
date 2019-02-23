@@ -18,9 +18,10 @@
   "dependencies": {
     "colors": "^1.3.3",
     "dotenv": "^4.0.0",
-    "nodemon": "^1.18.9",
+    "imgur-uploader": "^4.2.1",
+    "nodemon": "^1.18.10",
     "penteract": "^0.4.0",
-    "telegraf": "^3.25.5"
+    "telegraf": "^3.27.1"
   },
   "devDependencies": {
     "@atomix/eslint-config": "^6.4.0",

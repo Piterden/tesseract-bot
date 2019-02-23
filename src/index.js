@@ -3,6 +3,7 @@ require('dotenv').load()
 const Telegraf = require('telegraf')
 const Stage = require('telegraf/stage')
 const { recognize } = require('penteract')
+const uploader = require('imgur-uploader')
 
 const debug = require('./method/debug')
 const getBuffer = require('./method/get-buffer')
