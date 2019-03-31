@@ -2,6 +2,7 @@ const { inspect } = require('util')
 
 
 const debug = (data) => console.log(inspect(data, {
+  depth: Infinity,
   colors: true,
   showHidden: true,
 }))

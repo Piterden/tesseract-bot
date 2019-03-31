@@ -21,7 +21,8 @@
     "imgur-uploader": "^4.2.1",
     "nodemon": "^1.18.10",
     "penteract": "^0.4.0",
-    "telegraf": "^3.27.1"
+    "promise-exec": "^0.1.0",
+    "telegraf": "^3.28.0"
   },
   "devDependencies": {
     "@atomix/eslint-config": "^6.4.0",
