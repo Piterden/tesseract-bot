@@ -16,6 +16,7 @@ parserOptions:
 globals:
   BigInt: true
 rules:
+  no-useless-escape: off
   no-param-reassign: off
   prettier/prettier: off
   prefer-rest-params: off

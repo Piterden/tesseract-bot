@@ -11,10 +11,15 @@ const { leave } = Stage
 const capitalize = (str) =>
   str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
 
+const humanize = (str) =>
+  str.split('_').map(capitalize).join(' ')
+
 module.exports = new Scene('options')
+
   .enter(async (ctx) => {
     const params = await exec('tesseract --print-parameters')
-    const parsed = params[0].split('\n')
+
+    ctx.session.parsed = params[0].split('\n')
       .map((param, idx) => {
         const [key, value, desc] = param.split('\t')
 
@@ -35,31 +40,116 @@ module.exports = new Scene('options')
       }, {})
 
     await ctx.reply(
-      'Categories',
+      '__Options__ _Categories_',
       {
-        ...Markup.inlineKeyboard(
-          Object.keys(parsed)
-            .map((category) => ({
-              text: `${capitalize(category)} (${Object.keys(parsed[category]).length})`,
-              callback_data: `!category=${category}`,
-            }))
-            .reduce((acc, cur, idx) => {
-              const index = Math.ceil((idx + 1) / 3)
+        ...Markup.inlineKeyboard(Object.keys(ctx.session.parsed)
+          .map((category) => ({
+            text: `${capitalize(category)} (${
+              Object.keys(ctx.session.parsed[category]).length
+            })`,
+            callback_data: `!category=${category}`,
+          }))
+          .reduce((acc, cur, idx) => {
+            const index = Math.ceil((idx + 1) / 3) - 1
 
-              acc[index - 1] = acc[index - 1] || []
-              acc[index - 1].push(cur)
+            acc[index] = acc[index] || []
+            acc[index].push(cur)
 
-              return acc
-            }, []))
-          .extra(),
+            return acc
+          }, [])).extra(),
         disable_web_page_preview: true,
         parse_mode: 'Markdown',
       }
     )
 
-    // debug()
     ctx.answerCbQuery()
   })
+
+  .action(
+    /^!category=(\w+)$/,
+    async (ctx) => {
+      const category = ctx.match[1]
+
+      await ctx.reply(
+        `*Options*
+_Category:_ ${capitalize(category)}`,
+        {
+          ...Markup.inlineKeyboard(Object.keys(ctx.session.parsed[category])
+            .map((type) => ({
+              text: `${capitalize(type)} (${
+                Object.keys(ctx.session.parsed[category][type]).length
+              })`,
+              callback_data: `!category=${category}&type=${type}`,
+            }))
+            .reduce((acc, cur, idx) => {
+              const index = Math.ceil((idx + 1) / 3) - 1
+
+              acc[index] = acc[index] || []
+              acc[index].push(cur)
+
+              return acc
+            }, [])).extra(),
+          disable_web_page_preview: true,
+          parse_mode: 'Markdown',
+        }
+      )
+    }
+  )
+
+  .action(
+    /^!category=(\w+)&type=(\w+)$/,
+    async (ctx) => {
+      const [, category, type] = ctx.match
+
+      await ctx.reply(
+        `*Options*
+_Category:_ *${capitalize(category)}*
+_Type:_ *${capitalize(type)}*`,
+        {
+          ...Markup.inlineKeyboard(Object.keys(ctx.session.parsed[category][type])
+            .map((param) => [{
+              text: `${humanize(param)} = ${
+                ctx.session.parsed[category][type][param].value
+              }`,
+              callback_data: `!category=${category}&type=${type}&param=${param}`,
+            }])
+          ).extra(),
+          disable_web_page_preview: true,
+          parse_mode: 'Markdown',
+        }
+      )
+    }
+  )
+
+  .action(
+    /^!category=(\w+)&type=(\w+)&param=(\w+)$/,
+    async (ctx) => {
+      const [, category, type, param] = ctx.match
+
+      await ctx.reply(
+        `*Options*
+_Category:_ *${capitalize(category)}*
+_Type:_ *${capitalize(type)}*
+_Param:_ *${category}\_${type}\_${param}*
+
+_Description:_ ${ctx.session.parsed[category][type][param].desc}
+
+_Value:_ *${ctx.session.parsed[category][type][param].value}*`,
+        {
+          ...Markup.inlineKeyboard([
+            [
+              {
+                text: 'Change',
+                callback_data: `!change=${category}_${type}_${param}`,
+              },
+            ],
+          ]).extra(),
+          parse_mode: 'Markdown',
+        }
+      )
+    }
+  )
+  // debug()
   .leave((ctx) => ctx.reply('Buy'))
   .hears(/hi/gi, leave())
   .on('message', (ctx) => ctx.reply('Send `hi`'))
