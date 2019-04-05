@@ -5,12 +5,13 @@ const Stage = require('telegraf/stage')
 const { recognize } = require('penteract')
 const uploader = require('imgur-uploader')
 
-const debug = require('./method/debug')
-const getBuffer = require('./method/get-buffer')
-const getFileId = require('./method/get-file-id')
-const getImageButtons = require('./method/get-image-buttons')
-const langsScene = require('./scene/langs')
-const optionsScene = require('./scene/options')
+const {
+  debug,
+  getBuffer,
+  getFileId,
+  getImageButtons,
+} = require('./method')
+const { langsScene, optionsScene } = require('./scene')
 
 
 const { leave } = Stage
@@ -27,12 +28,12 @@ const bot = new Telegraf(BOT_TOKEN, {
 bot.use(session())
 bot.use(stage.middleware())
 
-bot.start(async ({ replyWithMarkdown, from }) => {
-  await replyWithMarkdown(
-    `Hi ${from.first_name || 'stranger'}, I am the Tesseract OCR bot.
-Please send me an image like a photo, which contains English text...`,
+bot.start(async (ctx) => {
+  await ctx.replyWithMarkdown(
+    `Hi ${ctx.from.first_name || 'stranger'}, I am the Tesseract OCR bot.
+Please send me an image containing some English text, like a photo...`,
     Markup.removeKeyboard().extra()
-  ).catch(console.log)
+  ).catch(debug)
 })
 
 bot.on(
@@ -69,14 +70,14 @@ bot.action(
     let result = await recognize(buffer, { langs })
 
     if (!result) {
-      result = 'Ok'
+      result = '[ERROR] The result is empty.'
     }
 
     return reply(result, {
       ...Markup.inlineKeyboard([
         Markup.callbackButton('Change options', '!menu=options'),
         Markup.callbackButton('Change languages', '!menu=langs'),
-      ]).oneTime().resize().extra(),
+      ]).extra(),
       disable_web_page_preview: true,
     })
   }

@@ -3,7 +3,7 @@ const Stage = require('telegraf/stage')
 const Scene = require('telegraf/scenes/base')
 const Markup = require('telegraf/markup')
 
-const debug = require('../method/debug')
+// const debug = require('../method/debug')
 
 
 const { leave } = Stage
@@ -17,9 +17,9 @@ const humanize = (str) =>
 module.exports = new Scene('options')
 
   .enter(async (ctx) => {
-    const params = await exec('tesseract --print-parameters')
+    const stdout = await exec('tesseract --print-parameters')
 
-    ctx.session.parsed = params[0].split('\n')
+    ctx.session.parsed = stdout[0].split('\n')
       .map((param, idx) => {
         const [key, value, desc] = param.split('\t')
 
@@ -39,8 +39,9 @@ module.exports = new Scene('options')
         return acc
       }, {})
 
-    await ctx.reply(
-      '__Options__ _Categories_',
+    ctx.session.optionsMessage = await ctx.reply(
+      `*Options*
+_Categories_`,
       {
         ...Markup.inlineKeyboard(Object.keys(ctx.session.parsed)
           .map((category) => ({
@@ -56,7 +57,8 @@ module.exports = new Scene('options')
             acc[index].push(cur)
 
             return acc
-          }, [])).extra(),
+          }, []),
+        ).extra(),
         disable_web_page_preview: true,
         parse_mode: 'Markdown',
       }
@@ -65,30 +67,40 @@ module.exports = new Scene('options')
     ctx.answerCbQuery()
   })
 
+  .action(/^!reenter$/, async (ctx) => ctx.scene.reenter())
+
   .action(
     /^!category=(\w+)$/,
     async (ctx) => {
       const category = ctx.match[1]
 
-      await ctx.reply(
+      await ctx.deleteMessage(ctx.session.optionsMessage.message_id)
+
+      ctx.session.optionsMessage = await ctx.reply(
         `*Options*
-_Category:_ ${capitalize(category)}`,
+_Category:_ *${capitalize(category)}*`,
         {
-          ...Markup.inlineKeyboard(Object.keys(ctx.session.parsed[category])
-            .map((type) => ({
-              text: `${capitalize(type)} (${
-                Object.keys(ctx.session.parsed[category][type]).length
-              })`,
-              callback_data: `!category=${category}&type=${type}`,
-            }))
-            .reduce((acc, cur, idx) => {
-              const index = Math.ceil((idx + 1) / 3) - 1
+          ...Markup.inlineKeyboard([
+            ...Object.keys(ctx.session.parsed[category])
+              .map((type) => ({
+                text: `${capitalize(type)} (${
+                  Object.keys(ctx.session.parsed[category][type]).length
+                })`,
+                callback_data: `!category=${category}&type=${type}`,
+              }))
+              .reduce((acc, cur, idx) => {
+                const index = Math.ceil((idx + 1) / 3)
 
-              acc[index] = acc[index] || []
-              acc[index].push(cur)
+                acc[index] = acc[index] || []
+                acc[index].push(cur)
 
-              return acc
-            }, [])).extra(),
+                return acc
+              }, []),
+            {
+              text: 'Level Up',
+              callback_data: '!reenter',
+            },
+          ]).extra(),
           disable_web_page_preview: true,
           parse_mode: 'Markdown',
         }
@@ -101,18 +113,27 @@ _Category:_ ${capitalize(category)}`,
     async (ctx) => {
       const [, category, type] = ctx.match
 
-      await ctx.reply(
+      await ctx.deleteMessage(ctx.session.optionsMessage.message_id)
+
+      ctx.session.optionsMessage = await ctx.reply(
         `*Options*
 _Category:_ *${capitalize(category)}*
 _Type:_ *${capitalize(type)}*`,
         {
-          ...Markup.inlineKeyboard(Object.keys(ctx.session.parsed[category][type])
-            .map((param) => [{
-              text: `${humanize(param)} = ${
-                ctx.session.parsed[category][type][param].value
-              }`,
-              callback_data: `!category=${category}&type=${type}&param=${param}`,
-            }])
+          ...Markup.inlineKeyboard(
+            [
+              [{
+                text: 'Level Up',
+                callback_data: `!category=${category}`,
+              }],
+              ...Object.keys(ctx.session.parsed[category][type])
+                .map((param) => [{
+                  text: `${humanize(param)} = ${
+                    ctx.session.parsed[category][type][param].value
+                  }`,
+                  callback_data: `!category=${category}&type=${type}&param=${param}`,
+                }]),
+            ]
           ).extra(),
           disable_web_page_preview: true,
           parse_mode: 'Markdown',
@@ -126,7 +147,9 @@ _Type:_ *${capitalize(type)}*`,
     async (ctx) => {
       const [, category, type, param] = ctx.match
 
-      await ctx.reply(
+      await ctx.deleteMessage(ctx.session.optionsMessage.message_id)
+
+      ctx.session.optionsMessage = await ctx.reply(
         `*Options*
 _Category:_ *${capitalize(category)}*
 _Type:_ *${capitalize(type)}*
@@ -138,6 +161,10 @@ _Value:_ *${ctx.session.parsed[category][type][param].value}*`,
         {
           ...Markup.inlineKeyboard([
             [
+              {
+                text: 'Level Up',
+                callback_data: `!category=${category}&type=${type}`,
+              },
               {
                 text: 'Change',
                 callback_data: `!change=${category}_${type}_${param}`,

@@ -1,9 +1,9 @@
-const Stage = require('telegraf/stage')
+// const Stage = require('telegraf/stage')
 const Markup = require('telegraf/markup')
 const Scene = require('telegraf/scenes/base')
 
 // const debug = require('../method/debug')
-const getLangButtons = require('../method/get-lang-buttons')
+const { getLangButtons } = require('../method')
 const messageEnabledLangs = require('../message/enabled-langs')
 
 
@@ -51,4 +51,4 @@ module.exports = new Scene('langs')
     }
   )
 
-  // .action()
+// .action()
