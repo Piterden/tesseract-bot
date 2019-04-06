@@ -11,7 +11,9 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node_modules/.bin/nodemon -w src src/index.js"
+    "dev": "./node_modules/.bin/nodemon -w src src/index.js",
+    "lint": "./node_modules/.bin/eslint --ext .js src",
+    "lint:fix": "./node_modules/.bin/eslint --ext .js --fix src"
   },
   "author": "Denis Efremov <efremov.a.denis@gmail.com>",
   "license": "MIT",
@@ -25,7 +27,7 @@
     "telegraf": "^3.28.0"
   },
   "devDependencies": {
-    "@atomix/eslint-config": "^7.0.0-next.1",
+    "@atomix/eslint-config": "^6.4.0",
     "babel-eslint": "^7.2.3",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "eslint": "^4.19.1"
