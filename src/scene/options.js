@@ -27,12 +27,17 @@ module.exports = new Scene('options')
       })
       .filter(Boolean)
       .reduce((acc, { key, value, desc }) => {
-        const [category, type, ...param] = key.split('_')
+        const segments = key.split('_')
+        const [category, type, ...param] = segments.length === 2
+          ? ['root', ...segments]
+          : segments
         const name = param.join('_')
 
         acc[category] = acc[category] || {}
         acc[category][type] = acc[category][type] || {}
         acc[category][type][name] = acc[category][type][name] || {}
+
+        acc[category][type][name].key = key
         acc[category][type][name].desc = desc
         acc[category][type][name].value = value
 
