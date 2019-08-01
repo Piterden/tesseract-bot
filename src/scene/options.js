@@ -3,7 +3,7 @@ const Stage = require('telegraf/stage')
 const Scene = require('telegraf/scenes/base')
 const Markup = require('telegraf/markup')
 
-// const debug = require('../method/debug')
+const debug = require('../method/debug')
 
 
 const { leave } = Stage
@@ -35,11 +35,7 @@ module.exports = new Scene('options')
 
         acc[category] = acc[category] || {}
         acc[category][type] = acc[category][type] || {}
-        acc[category][type][name] = acc[category][type][name] || {}
-
-        acc[category][type][name].key = key
-        acc[category][type][name].desc = desc
-        acc[category][type][name].value = value
+        acc[category][type][name] = { key, desc, value }
 
         return acc
       }, {})
@@ -72,7 +68,10 @@ _Categories_`,
     ctx.answerCbQuery()
   })
 
-  .action(/^!reenter$/, async (ctx) => ctx.scene.reenter())
+  .action(/^!reenter$/, async (ctx) => {
+    await ctx.deleteMessage(ctx.session.optionsMessage.message_id)
+    ctx.scene.reenter()
+  })
 
   .action(
     /^!category=(\w+)$/,
@@ -81,31 +80,33 @@ _Categories_`,
 
       await ctx.deleteMessage(ctx.session.optionsMessage.message_id)
 
+      const buttons = Object.keys(ctx.session.parsed[category])
+        .map((type) => ({
+          text: `${capitalize(type)} (${
+            Object.keys(ctx.session.parsed[category][type]).length
+          })`,
+          callback_data: `!category=${category}&type=${type}`,
+        }))
+        .reduce((acc, cur, idx) => {
+          const index = Math.ceil((idx + 1) / 3)
+
+          acc[index] = acc[index] || []
+          acc[index].push(cur)
+
+          return acc
+        }, [])
+        .filter(Boolean)
+
+      buttons.push([{
+        text: 'To top',
+        callback_data: '!reenter',
+      }])
+
       ctx.session.optionsMessage = await ctx.reply(
         `*Options*
 _Category:_ *${capitalize(category)}*`,
         {
-          ...Markup.inlineKeyboard([
-            ...Object.keys(ctx.session.parsed[category])
-              .map((type) => ({
-                text: `${capitalize(type)} (${
-                  Object.keys(ctx.session.parsed[category][type]).length
-                })`,
-                callback_data: `!category=${category}&type=${type}`,
-              }))
-              .reduce((acc, cur, idx) => {
-                const index = Math.ceil((idx + 1) / 3)
-
-                acc[index] = acc[index] || []
-                acc[index].push(cur)
-
-                return acc
-              }, []),
-            {
-              text: 'Level Up',
-              callback_data: '!reenter',
-            },
-          ]).extra(),
+          ...Markup.inlineKeyboard(buttons).extra(),
           disable_web_page_preview: true,
           parse_mode: 'Markdown',
         }
@@ -182,6 +183,6 @@ _Value:_ *${ctx.session.parsed[category][type][param].value}*`,
     }
   )
   // debug()
-  .leave((ctx) => ctx.reply('Buy'))
-  .hears(/hi/gi, leave())
-  .on('message', (ctx) => ctx.reply('Send `hi`'))
+  // .leave((ctx) => ctx.reply('Buy'))
+  // .hears(/hi/gi, leave())
+  // .on('message', (ctx) => ctx.reply('Send `hi`'))
