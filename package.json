@@ -21,13 +21,13 @@
     "colors": "^1.4.0",
     "dotenv": "^4.0.0",
     "imgur-uploader": "^4.2.1",
-    "nodemon": "^1.19.3",
+    "nodemon": "^1.19.4",
     "penteract": "^0.4.0",
     "promise-exec": "^0.1.0",
-    "telegraf": "^3.32.0"
+    "telegraf": "^3.33.0"
   },
   "devDependencies": {
-    "@atomix/eslint-config": "^7.0.0-next.1",
+    "@atomix/eslint-config": "^7.1.0",
     "babel-eslint": "^7.2.3",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "eslint": "^5.16.0",
