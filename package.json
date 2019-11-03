@@ -24,7 +24,7 @@
     "nodemon": "^1.19.4",
     "penteract": "^0.4.0",
     "promise-exec": "^0.1.0",
-    "telegraf": "^3.33.0"
+    "telegraf": "^3.33.3"
   },
   "devDependencies": {
     "@atomix/eslint-config": "^7.1.0",
