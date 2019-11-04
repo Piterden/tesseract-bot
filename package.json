@@ -11,9 +11,9 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "./node_modules/.bin/nodemon -w src src/index.js",
-    "lint": "./node_modules/.bin/eslint --ext .js src",
-    "lint:fix": "./node_modules/.bin/eslint --ext .js --fix src"
+    "dev": "nodemon -w src src/index.js",
+    "lint": "eslint --ext .js src",
+    "lint:fix": "eslint --ext .js --fix src"
   },
   "author": "Denis Efremov <efremov.a.denis@gmail.com>",
   "license": "MIT",
@@ -31,6 +31,12 @@
     "babel-eslint": "^7.2.3",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "eslint": "^5.16.0",
+    "husky": "^3.0.9",
     "prettier": "^1.18.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "npm run lint"
+    }
   }
 }
