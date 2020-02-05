@@ -12,3 +12,8 @@ Send a photo with English text to bot in private conversation. The bot will answ
 - [ ] change language
 - [ ] change settings
 
+## Donate
+
+- **BTC** `3F275vPSCvYW19MHZqSjw79fEwwU4MbTgV`
+- **LTC** `MGMCQB3QAcrSBjU3eGJviqB2J2f5BNVRGr`
+- **DOGE** `D5m69FRDGEn3G3xuakvqTxUpGVt6NegKJp`
